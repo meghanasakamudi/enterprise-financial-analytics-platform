@@ -1,12 +1,12 @@
 <div class="app-shell">
   <aside class="sidebar" aria-label="Primary navigation">
     <div class="brand"><span class="brand-mark">F</span><span>FinSight</span></div>
-    <nav><a class="nav-link active" href="#overview">Overview</a><a class="nav-link" href="#customers">Customers</a><a class="nav-link" href="#analytics">Analytics</a><a class="nav-link" href="#reports">Reports</a></nav>
+    <nav><a class="nav-link active" href="#overview">Overview</a><a class="nav-link" href="#customers">Customers</a><a class="nav-link" href="#transactions">Transactions</a><a class="nav-link" href="#analytics">Analytics</a></nav>
     <div class="sidebar-note"><strong>Portfolio Project</strong><span>Angular + Spring Boot + PostgreSQL</span></div>
   </aside>
   <main>
-    <header class="topbar"><div><p class="eyebrow">FINANCIAL OPERATIONS</p><h1>Executive Overview</h1><p class="subtitle">Customer and portfolio performance at a glance.</p></div><button type="button">Export report</button></header>
-
+    <header class="topbar"><div><p class="eyebrow">FINANCIAL OPERATIONS</p><h1>Executive Overview</h1><p class="subtitle">Manage customers, record transactions, and turn operational data into financial insights.</p></div><button type="button" (click)="refreshDashboard()">Refresh data</button></header>
+    <p class="feedback" *ngIf="message">{{ message }}</p>
     <p class="card empty" *ngIf="loading">Loading live portfolio analytics…</p>
     <p class="card empty" *ngIf="!loading && !apiAvailable">The dashboard API is offline. Start PostgreSQL and the Spring Boot backend to load live metrics.</p>
 
@@ -15,25 +15,43 @@
     </section>
 
     <section id="analytics" class="analytics-grid" *ngIf="apiAvailable && !loading">
-      <article class="card chart-card">
-        <div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2>Revenue trend</h2></div><span>Last 6 months</span></div>
-        <div class="chart" role="img" aria-label="Monthly revenue calculated from stored transactions">
-          <div *ngFor="let metric of monthlyTrend" [style.height.%]="barHeight(metric.revenue)" [attr.title]="metric.month + ': $' + metric.revenue"><span>{{ metric.month }}</span></div>
-        </div>
-        <p class="demo-note">Calculated from REVENUE transactions stored in PostgreSQL.</p>
+      <article class="card chart-card"><div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2>Revenue trend</h2></div><span>Last 6 months</span></div><div class="chart" role="img" aria-label="Monthly revenue calculated from stored transactions"><div *ngFor="let metric of monthlyTrend" [style.height.%]="barHeight(metric.revenue)" [attr.title]="metric.month + ': ' + formatCurrency(metric.revenue)"><span>{{ metric.month }}</span></div></div><p class="demo-note">Calculated from REVENUE transactions stored in PostgreSQL.</p></article>
+      <article class="card insight-card"><p class="eyebrow">DECISION SUPPORT</p><h2>Analytics engine</h2><div class="insight"><strong>Revenue & expenses</strong><span>Aggregated from recorded transaction types.</span></div><div class="insight"><strong>Operating margin</strong><span>Calculated as net income divided by revenue.</span></div><div class="insight"><strong>Customer activity</strong><span>Counts customers with activity in the reporting window.</span></div></article>
+    </section>
+
+    <section class="management-grid" *ngIf="apiAvailable && !loading">
+      <article class="card form-card">
+        <p class="eyebrow">CUSTOMER ONBOARDING</p><h2>Add customer</h2>
+        <form (ngSubmit)="addCustomer()">
+          <label>Name<input name="name" [(ngModel)]="customerForm.name" required placeholder="Customer or organization"></label>
+          <label>Email<input name="email" [(ngModel)]="customerForm.email" required type="email" placeholder="contact@example.com"></label>
+          <div class="field-row"><label>Segment<select name="segment" [(ngModel)]="customerForm.segment"><option>Enterprise</option><option>Growth</option><option>Small Business</option></select></label><label>Status<select name="status" [(ngModel)]="customerForm.status"><option>Active</option><option>Prospect</option><option>Inactive</option></select></label></div>
+          <button type="submit">Create customer</button>
+        </form>
       </article>
-      <article class="card insight-card">
-        <p class="eyebrow">DECISION SUPPORT</p><h2>Analytics engine</h2>
-        <div class="insight"><strong>Revenue & expenses</strong><span>Aggregated by transaction type for the selected reporting period.</span></div>
-        <div class="insight"><strong>Operating margin</strong><span>Calculated as net income divided by revenue.</span></div>
-        <div class="insight"><strong>Customer activity</strong><span>Counts customers with transactions inside the reporting window.</span></div>
+
+      <article id="transactions" class="card form-card">
+        <p class="eyebrow">FINANCIAL ACTIVITY</p><h2>Record transaction</h2>
+        <form (ngSubmit)="addTransaction()">
+          <label>Customer<select name="customerId" [(ngModel)]="transactionForm.customerId" required><option [ngValue]="0" disabled>Select customer</option><option *ngFor="let customer of customers" [ngValue]="customer.id">{{ customer.name }}</option></select></label>
+          <div class="field-row"><label>Type<select name="transactionType" [(ngModel)]="transactionForm.transactionType"><option value="REVENUE">Revenue</option><option value="EXPENSE">Expense</option></select></label><label>Amount<input name="amount" [(ngModel)]="transactionForm.amount" required min="0.01" step="0.01" type="number"></label></div>
+          <div class="field-row"><label>Category<input name="category" [(ngModel)]="transactionForm.category" required></label><label>Date<input name="transactionDate" [(ngModel)]="transactionForm.transactionDate" required type="date"></label></div>
+          <button type="submit" [disabled]="!customers.length">Record transaction</button>
+        </form>
       </article>
     </section>
 
     <section id="customers" class="card customer-card">
       <div class="section-heading"><div><p class="eyebrow">CUSTOMER MANAGEMENT</p><h2>Customer portfolio</h2></div><span class="status" [class.offline]="!apiAvailable">{{ apiAvailable ? 'API connected' : 'API offline' }}</span></div>
-      <div class="table-wrap" *ngIf="!loading && customers.length"><table><thead><tr><th>Name</th><th>Email</th><th>Segment</th><th>Status</th></tr></thead><tbody><tr *ngFor="let customer of customers"><td>{{ customer.name }}</td><td>{{ customer.email }}</td><td>{{ customer.segment }}</td><td><span class="pill">{{ customer.status }}</span></td></tr></tbody></table></div>
-      <p class="empty" *ngIf="!loading && apiAvailable && !customers.length">No customer records yet. Add customers and transactions through the REST APIs to populate the analytics dashboard.</p>
+      <label class="search">Search portfolio<input [(ngModel)]="searchTerm" placeholder="Name, email, segment or status"></label>
+      <div class="table-wrap" *ngIf="!loading && filteredCustomers.length"><table><thead><tr><th>Name</th><th>Email</th><th>Segment</th><th>Status</th></tr></thead><tbody><tr *ngFor="let customer of filteredCustomers"><td>{{ customer.name }}</td><td>{{ customer.email }}</td><td>{{ customer.segment }}</td><td><span class="pill">{{ customer.status }}</span></td></tr></tbody></table></div>
+      <p class="empty" *ngIf="!loading && apiAvailable && !filteredCustomers.length">No matching customer records.</p>
+    </section>
+
+    <section class="card customer-card" *ngIf="apiAvailable && !loading">
+      <div class="section-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h2>Transactions</h2></div><span>{{ transactions.length }} records</span></div>
+      <div class="table-wrap" *ngIf="transactions.length"><table><thead><tr><th>Date</th><th>Customer</th><th>Category</th><th>Type</th><th>Amount</th></tr></thead><tbody><tr *ngFor="let transaction of transactions"><td>{{ transaction.transactionDate }}</td><td>{{ transaction.customerName }}</td><td>{{ transaction.category }}</td><td><span class="pill">{{ transaction.transactionType }}</span></td><td>{{ formatCurrency(transaction.amount) }}</td></tr></tbody></table></div>
+      <p class="empty" *ngIf="!transactions.length">No financial transactions recorded yet.</p>
     </section>
   </main>
 </div>
