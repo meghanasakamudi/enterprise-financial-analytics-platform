@@ -1,51 +1,39 @@
 <div class="app-shell">
   <aside class="sidebar" aria-label="Primary navigation">
     <div class="brand"><span class="brand-mark">F</span><span>FinSight</span></div>
-    <nav>
-      <a class="nav-link active" href="#overview">Overview</a>
-      <a class="nav-link" href="#customers">Customers</a>
-      <a class="nav-link" href="#analytics">Analytics</a>
-      <a class="nav-link" href="#reports">Reports</a>
-    </nav>
+    <nav><a class="nav-link active" href="#overview">Overview</a><a class="nav-link" href="#customers">Customers</a><a class="nav-link" href="#analytics">Analytics</a><a class="nav-link" href="#reports">Reports</a></nav>
     <div class="sidebar-note"><strong>Portfolio Project</strong><span>Angular + Spring Boot + PostgreSQL</span></div>
   </aside>
-
   <main>
-    <header class="topbar">
-      <div><p class="eyebrow">FINANCIAL OPERATIONS</p><h1>Executive Overview</h1><p class="subtitle">Customer and portfolio performance at a glance.</p></div>
-      <button type="button">Export report</button>
-    </header>
+    <header class="topbar"><div><p class="eyebrow">FINANCIAL OPERATIONS</p><h1>Executive Overview</h1><p class="subtitle">Customer and portfolio performance at a glance.</p></div><button type="button">Export report</button></header>
 
-    <section id="overview" class="kpi-grid" aria-label="Key performance indicators">
-      <article class="card kpi" *ngFor="let kpi of kpis">
-        <p>{{ kpi.label }}</p><strong>{{ kpi.value }}</strong><span>{{ kpi.detail }}</span>
-      </article>
+    <p class="card empty" *ngIf="loading">Loading live portfolio analytics…</p>
+    <p class="card empty" *ngIf="!loading && !apiAvailable">The dashboard API is offline. Start PostgreSQL and the Spring Boot backend to load live metrics.</p>
+
+    <section id="overview" class="kpi-grid" aria-label="Key performance indicators" *ngIf="apiAvailable && !loading">
+      <article class="card kpi" *ngFor="let kpi of kpis"><p>{{ kpi.label }}</p><strong>{{ kpi.value }}</strong><span>{{ kpi.detail }}</span></article>
     </section>
 
-    <section id="analytics" class="analytics-grid">
+    <section id="analytics" class="analytics-grid" *ngIf="apiAvailable && !loading">
       <article class="card chart-card">
         <div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2>Revenue trend</h2></div><span>Last 6 months</span></div>
-        <div class="chart" role="img" aria-label="Illustrative six month revenue trend">
-          <div style="height:42%"><span>Mar</span></div><div style="height:55%"><span>Apr</span></div><div style="height:51%"><span>May</span></div><div style="height:68%"><span>Jun</span></div><div style="height:76%"><span>Jul</span></div><div style="height:88%"><span>Aug</span></div>
+        <div class="chart" role="img" aria-label="Monthly revenue calculated from stored transactions">
+          <div *ngFor="let metric of monthlyTrend" [style.height.%]="barHeight(metric.revenue)" [attr.title]="metric.month + ': $' + metric.revenue"><span>{{ metric.month }}</span></div>
         </div>
-        <p class="demo-note">Illustrative KPI data until transaction analytics endpoints are implemented.</p>
+        <p class="demo-note">Calculated from REVENUE transactions stored in PostgreSQL.</p>
       </article>
-
       <article class="card insight-card">
-        <p class="eyebrow">DECISION SUPPORT</p><h2>Portfolio insights</h2>
-        <div class="insight"><strong>Revenue momentum</strong><span>Growth remains positive across the current reporting window.</span></div>
-        <div class="insight"><strong>Customer health</strong><span>Retention is stable; risk segmentation will be driven by backend analytics.</span></div>
-        <div class="insight"><strong>Next milestone</strong><span>Replace illustrative metrics with aggregated transaction data.</span></div>
+        <p class="eyebrow">DECISION SUPPORT</p><h2>Analytics engine</h2>
+        <div class="insight"><strong>Revenue & expenses</strong><span>Aggregated by transaction type for the selected reporting period.</span></div>
+        <div class="insight"><strong>Operating margin</strong><span>Calculated as net income divided by revenue.</span></div>
+        <div class="insight"><strong>Customer activity</strong><span>Counts customers with transactions inside the reporting window.</span></div>
       </article>
     </section>
 
     <section id="customers" class="card customer-card">
-      <div class="section-heading"><div><p class="eyebrow">CUSTOMER MANAGEMENT</p><h2>Customer portfolio</h2></div><span class="status" [class.offline]="!apiAvailable">{{ apiAvailable ? 'API connected' : 'Start backend to load data' }}</span></div>
-      <p *ngIf="loading">Loading customers…</p>
-      <div class="table-wrap" *ngIf="!loading && customers.length">
-        <table><thead><tr><th>Name</th><th>Email</th><th>Segment</th><th>Status</th></tr></thead><tbody><tr *ngFor="let customer of customers"><td>{{ customer.name }}</td><td>{{ customer.email }}</td><td>{{ customer.segment }}</td><td><span class="pill">{{ customer.status }}</span></td></tr></tbody></table>
-      </div>
-      <p class="empty" *ngIf="!loading && !customers.length">No customer records yet. Add records through the REST API to populate this table.</p>
+      <div class="section-heading"><div><p class="eyebrow">CUSTOMER MANAGEMENT</p><h2>Customer portfolio</h2></div><span class="status" [class.offline]="!apiAvailable">{{ apiAvailable ? 'API connected' : 'API offline' }}</span></div>
+      <div class="table-wrap" *ngIf="!loading && customers.length"><table><thead><tr><th>Name</th><th>Email</th><th>Segment</th><th>Status</th></tr></thead><tbody><tr *ngFor="let customer of customers"><td>{{ customer.name }}</td><td>{{ customer.email }}</td><td>{{ customer.segment }}</td><td><span class="pill">{{ customer.status }}</span></td></tr></tbody></table></div>
+      <p class="empty" *ngIf="!loading && apiAvailable && !customers.length">No customer records yet. Add customers and transactions through the REST APIs to populate the analytics dashboard.</p>
     </section>
   </main>
 </div>
