@@ -7,5 +7,9 @@ import { Customer } from '../models/customer';
 export class CustomerService {
   private readonly apiUrl = 'http://localhost:8080/api/customers';
   constructor(private readonly http: HttpClient) {}
+
   getCustomers(): Observable<Customer[]> { return this.http.get<Customer[]>(this.apiUrl); }
+  createCustomer(customer: Customer): Observable<Customer> { return this.http.post<Customer>(this.apiUrl, customer); }
+  updateCustomer(id: number, customer: Customer): Observable<Customer> { return this.http.put<Customer>(`${this.apiUrl}/${id}`, customer); }
+  deleteCustomer(id: number): Observable<void> { return this.http.delete<void>(`${this.apiUrl}/${id}`); }
 }
