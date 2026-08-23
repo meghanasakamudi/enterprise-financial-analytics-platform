@@ -1,80 +1,85 @@
 # Enterprise Financial Analytics Platform
 
-An evolving enterprise-style full-stack portfolio project combining customer management, financial analytics, reporting, and data-driven decision support.
+A simple full-stack portfolio project for customer management and financial analytics.
 
-> **Project status:** Active development. The repository is being built incrementally; features described as planned are not yet presented as complete.
+![Build and Test](https://github.com/meghanasakamudi/enterprise-financial-analytics-platform/actions/workflows/ci.yml/badge.svg)
 
-## Goals
+## Tech Stack
 
-- Demonstrate scalable Angular + Java/Spring Boot application architecture.
-- Build REST APIs backed by PostgreSQL.
-- Add financial transaction analytics and KPI dashboards.
-- Apply accessibility, validation, testing, security, and maintainable engineering practices.
-- Package the application for reproducible local development and later cloud deployment.
+- Angular + TypeScript
+- Java 17 + Spring Boot
+- PostgreSQL
+- Docker Compose
+- GitHub Actions
 
-## Current Implementation
+## Features
 
-- Spring Boot backend skeleton (Java 17)
-- PostgreSQL configuration through environment variables
-- Customer domain model and REST CRUD endpoints
-- Initial relational schema for customers and financial transactions
-- Angular frontend workspace dependencies initialized
-- Docker Compose PostgreSQL development service
+- Customer management
+- Revenue and expense transactions
+- Financial KPIs such as revenue, net income, expenses, and operating margin
+- Six-month revenue trend
+- Customer search
+- Basic responsive dashboard
+- REST API integration between Angular and Spring Boot
 
-## Planned Architecture
+## Architecture
 
 ```text
-Angular Web Application
-        |
-        | REST/JSON
-        v
-Spring Boot API
-        |
-        | JPA
-        v
+Angular Frontend
+      |
+      | REST API
+      v
+Spring Boot Backend
+      |
+      | JPA
+      v
 PostgreSQL
 ```
 
-## Technology Stack
+## Run Locally
 
-**Frontend:** Angular, TypeScript, RxJS (UI implementation in progress)  
-**Backend:** Java 17, Spring Boot, Spring Web, Spring Data JPA, Bean Validation  
-**Database:** PostgreSQL  
-**DevOps:** Git/GitHub, Docker Compose; CI/CD planned  
-**Testing:** Spring Boot Test; frontend/backend test suites planned
+### 1. Start PostgreSQL
 
-## Repository Structure
-
-```text
-backend/       Spring Boot REST API
-database/      Database schema and future migration/data assets
-frontend/      Angular web application
-docs/          Architecture and product documentation (planned)
+```bash
+docker compose up -d
 ```
 
-## Current API
+### 2. Start the backend
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Backend: `http://localhost:8080`
+
+### 3. Start the frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Frontend: `http://localhost:4200`
+
+## Optional Demo Data
+
+`database/demo-data.sql` contains fictional sample customers and transactions for local testing.
+
+## Main API Endpoints
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| GET | `/api/customers` | List customers |
-| GET | `/api/customers/{id}` | Retrieve a customer |
-| POST | `/api/customers` | Create a customer |
-| PUT | `/api/customers/{id}` | Update a customer |
-| DELETE | `/api/customers/{id}` | Delete a customer |
+| GET / POST | `/api/customers` | List or create customers |
+| PUT / DELETE | `/api/customers/{id}` | Update or delete a customer |
+| GET / POST | `/api/transactions` | List or create transactions |
+| GET | `/api/analytics/summary` | Financial KPI summary |
+| GET | `/api/analytics/monthly` | Monthly revenue trend |
 
-## Roadmap
+## Status
 
-1. Complete Angular application configuration and accessible dashboard shell.
-2. Add customer management UI and API integration.
-3. Implement financial transaction domain and analytics APIs.
-4. Add KPI cards, trend visualizations, filters, and reporting.
-5. Add authentication and role-based authorization.
-6. Add automated tests and GitHub Actions CI.
-7. Containerize the complete application and document deployment.
-
-## Engineering Approach
-
-This repository is intentionally developed in stages. Each milestone will add working functionality, tests, documentation, and measurable improvements rather than presenting placeholder features as finished work.
+Core portfolio functionality is implemented and the repository is validated through GitHub Actions. Additional features may be added gradually.
 
 ## License
 
